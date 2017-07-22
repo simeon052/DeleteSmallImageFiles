@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DeleteSmallImageFiles.Core;
+using Microsoft.WindowsAPICodePack.Dialogs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +25,44 @@ namespace DeleteSmallImageFiles
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
+        private void Open_Click(object sender, RoutedEventArgs e)
+        {
+            var Dialog = new CommonOpenFileDialog();
+            Dialog.IsFolderPicker = true;
+            Dialog.EnsureReadOnly = false;
+            Dialog.AllowNonFileSystemItems = false;
+            Dialog.DefaultDirectory = Application.Current.StartupUri.LocalPath;
+            var Result = Dialog.ShowDialog();
+
+            if (Result == CommonFileDialogResult.Ok)
+            {
+                Path.Text = Dialog.FileName;
+            }
+        }
+
+        private async void Delete_Click(object sender, RoutedEventArgs e)
+        {
+            Delete.IsEnabled = false;
+
+            foreach (var f in ImageFileLister.FindAll(Path.Text, (ifi) => 
+            {
+                System.Diagnostics.Debug.WriteLine($"{ifi.ToString()}");
+                return true;
+            }))
+            {
+                await Task.Run(() =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"{f}");
+                });
+            }
+            Delete.IsEnabled = true;
         }
     }
 }

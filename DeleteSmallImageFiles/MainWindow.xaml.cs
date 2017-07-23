@@ -2,6 +2,7 @@
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace DeleteSmallImageFiles
         public MainWindow()
         {
             InitializeComponent();
+            Path.Text = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -35,6 +37,7 @@ namespace DeleteSmallImageFiles
         private void Open_Click(object sender, RoutedEventArgs e)
         {
             var Dialog = new CommonOpenFileDialog();
+            Dialog.InitialDirectory = Path.Text;
             Dialog.IsFolderPicker = true;
             Dialog.EnsureReadOnly = false;
             Dialog.AllowNonFileSystemItems = false;
@@ -51,15 +54,38 @@ namespace DeleteSmallImageFiles
         {
             Delete.IsEnabled = false;
 
-            foreach (var f in ImageFileLister.FindAll(Path.Text, (ifi) => 
+            foreach (var f in ImageFileLister.FindAll(Path.Text, (ifi) =>
             {
-                System.Diagnostics.Debug.WriteLine($"{ifi.ToString()}");
-                return true;
+                if(ifi == null)
+                {
+                    return false;
+                }
+                try
+                {
+                    if ((ifi.Size < int.Parse(Size.Text)) && (ifi.Width < int.Parse(Width.Text)) && (ifi.Height < int.Parse(Height.Text)))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"{ifi.ToString()}");
+                        return true;
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+                return false;
             }))
             {
                 await Task.Run(() =>
                 {
                     System.Diagnostics.Debug.WriteLine($"{f}");
+                    try
+                    {
+                        File.Move(f, System.IO.Path.Combine(System.IO.Path.GetTempPath(), System.IO.Path.GetFileName(f)));
+                    }
+                    catch
+                    {
+                        File.Delete(f);
+                    }
                 });
             }
             Delete.IsEnabled = true;

@@ -64,7 +64,6 @@ namespace DeleteSmallImageFiles.Core
             {
                 using (Image img = System.Drawing.Image.FromFile(fi.FullName))
                 {
-                    System.Diagnostics.Debug.WriteLine($"{img.ToString()}");
                     ifi = new ImageFileInfo(img.Height, img.Width, fi.Length, fi.FullName);
                 }
             }
